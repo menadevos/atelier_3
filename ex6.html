@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Produits</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      margin: 20;
+      padding: 20;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 143vh;
+      flex-direction: column;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      color: #2e3d49;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+      margin: 5px;
+    }
+    
+    button:hover {
+      background-color: #0056b3;
+    }
+    
+    button:focus {
+      outline: none;
+    }
+    
+    input[type="text"] {
+      padding: 10px;
+      font-size: 1rem;
+      margin: 15px 0;
+      width: 100%;
+      max-width: 400px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    input[type="text"]:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+    
+    #listprod {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fafafa;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    #listprod p {
+      font-size: 1rem;
+      margin: 10px 0;
+    }
+    
+    #total {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #007bff;
+      font-weight: bold;
+    }
+    
+    #chart {
+      width: 100%;
+      max-width: 800px;
+      margin-top: 30px;
+      border-radius: 8px;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        width: 95%;
+      }
+    
+      button {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+      }
+    
+      input[type="text"] {
+        max-width: 100%;
+      }
+    
+      #chart {
+        max-width: 100%;
+      }
+    }
+    
+    @keyframes hoverAnimation {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
+    }
+    
+    button:hover {
+      animation: hoverAnimation 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <input type="text" id="searchBar" placeholder="Rechercher un produit" onkeyup="search()">
+    <button onclick="filtercat('Électronique')">Filtrer par Électronique</button>
+    <button onclick="filtercat('Mobilier')">Filtrer par Mobilier</button>
+    <button onclick="filtercat('Éclairage')">Filtrer par eclairage</button>
+
+    <button onclick="faiblest()">Produits en Faible Stock</button>
+    <button onclick="triprix()">Trier par Prix</button>
+    <button onclick="tristock()">Trier par Stock</button>
+    <div id="listprod"></div>
+    <canvas id="chart"></canvas>
+    <div id="total">Prix Total: 0€</div>
+  </div>
+
+  <script>
+    let products = [];
+
+    fetch('products.json')
+      .then(response => response.json())
+      .then(data => {
+        products = data;
+        renderlistprod(products);
+        displaychart(products);
+      })
+      .catch(error => console.error("Erreur lors du chargement des produits :", error));
+
+    function filterByCategory(products, category) {
+      return products.filter(product => product.category === category);
+    }
+
+    function calculatetotal(products) {
+      return products.reduce((total, product) => total + product.price, 0);
+    }
+
+    function faiblestProducts(products, threshold = 5) {
+      return products.filter(product => product.stock <= threshold);
+    }
+
+    function triprix() {
+      const sortedProducts = [...products].sort((a, b) => a.price - b.price);
+      renderlistprod(sortedProducts);
+    }
+
+    function tristock() {
+      const sortedProducts = [...products].sort((a, b) => a.stock - b.stock);
+      renderlistprod(sortedProducts);
+    }
+
+    function searchProducts(products, searchTerm) {
+      return products.filter(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+
+    function faiblest() {
+      const lowStockProducts = faiblestProducts(products);
+      renderlistprod(lowStockProducts);
+    }
+
+    function renderlistprod(filteredProducts) {
+      const listprodDiv = document.getElementById('listprod');
+      listprodDiv.innerHTML = filteredProducts.map(product => 
+        `<p>${product.name} - ${product.price}€ - Stock: ${product.stock}</p>`
+      ).join('');
+      updatetotal(filteredProducts);
+      displaychart(filteredProducts);
+    }
+
+    function updatetotal(filteredProducts) {
+      const total = calculatetotal(filteredProducts);
+      document.getElementById('total').textContent = `Prix Total: ${total}€`;
+    }
+
+    function displaychart(filteredProducts) {
+      const totals = filteredProducts.map(product => product.price);
+      
+      new Chart(document.getElementById("chart"), {
+        type: 'bar',
+        data: {
+          labels: filteredProducts.map(product => product.name),
+          datasets: [{
+            label: 'Prix des produits',
+            data: totals,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        }
+      });
+    }
+
+    function search() {
+      const searchTerm = document.getElementById('searchBar').value;
+      const results = searchProducts(products, searchTerm);
+      renderlistprod(results);
+    }
+
+    function filtercat(category) {
+      const filteredProducts = filterByCategory(products, category);
+      renderlistprod(filteredProducts);
+    }
+  </script>
+</body>
+</html>
+

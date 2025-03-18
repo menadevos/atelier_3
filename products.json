@@ -1,0 +1,12 @@
+[
+    { "name": "Ordinateur portable", "price": 999, "category": "Électronique", "stock": 10 },
+    { "name": "Téléphone portable", "price": 199, "category": "Électronique", "stock": 20 },
+    { "name": "Casque Bluetooth", "price": 129, "category": "Électronique", "stock": 15 },
+    { "name": "Clavier mécanique", "price": 89, "category": "Électronique", "stock": 25 },
+    { "name": "Souris sans fil", "price": 49, "category": "Électronique", "stock": 30 },
+    { "name": "Écran 4K", "price": 399, "category": "Électronique", "stock": 8 },
+    { "name": "Chaise ergonomique", "price": 249, "category": "Mobilier", "stock": 12 },
+    { "name": "Bureau en bois", "price": 499, "category": "Mobilier", "stock": 5 },
+    { "name": "Lampe de bureau LED", "price": 39, "category": "Éclairage", "stock": 40 },
+    { "name": "Casque VR", "price": 599, "category": "Électronique", "stock": 7 }
+]
